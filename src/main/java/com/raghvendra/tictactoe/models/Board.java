@@ -4,6 +4,9 @@ public class Board {
     private int size;
     private List<List<Cell>> board;
 
+    public Board(int dimension) {
+        
+    }
     public int getSize() {
         return size;
     }
