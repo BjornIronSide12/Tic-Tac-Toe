@@ -10,6 +10,7 @@ import main.java.com.raghvendra.tictactoe.exceptions.MoreThanOneBotException;
 import main.java.com.raghvendra.tictactoe.exceptions.PlayersCountDimensionMismatchException;
 import main.java.com.raghvendra.tictactoe.strategies.winningstrategies.WinningStrategy;
 
+
 /**
  * Game
  */
@@ -73,7 +74,7 @@ public class Game {
             return this;
         }
 
-        private boolean validateBotCount() throws MoreThanOneBotException {
+        private void validateBotCount() throws MoreThanOneBotException {
             int botCount = 0;
             for(Player player: players) {
                 if(player.getPlayerType().equals(PlayerType.BOT)) {
@@ -84,17 +85,15 @@ public class Game {
             if(botCount > 1) {
                 throw new MoreThanOneBotException();
             }
-            return true;
         }
         
-        private boolean validateDimensionAndPlayerCount() throws PlayersCountDimensionMismatchException{
+        private void validateDimensionAndPlayerCount() throws PlayersCountDimensionMismatchException{
             if(players.size() != dimension - 1) {
                 throw new PlayersCountDimensionMismatchException();
             }
-            return true;
         }
 
-        private boolean validateSymbolsForPlayers() throws DuplicateSymbolException {
+        private void validateSymbolsForPlayers() throws DuplicateSymbolException {
             Map<Character, Integer> symbolCounts = new HashMap<>();
 
             for(Player player: players) {
@@ -111,27 +110,18 @@ public class Game {
                 throw new DuplicateSymbolException();
                 }
             }
-            return true;
         }
         // We need to validate the data before building the game "Builder design pattern"
-        private boolean validate() throws Exception {
-            try {
-                validateBotCount();
-                validateDimensionAndPlayerCount();
-                validateSymbolsForPlayers();
-            }
-            catch (Exception e) {
-                throw e;
-            }
-            return true;
+        private void validate() throws Exception {
+            validateBotCount();
+            validateDimensionAndPlayerCount();                
+            validateSymbolsForPlayers();
         }
 
         // Builder requrires a build() method 
         // And we also need to make the constructor of the Game as private 
         public Game build() throws Exception {
-           
             validate();
-
             return new Game(
                     dimension,
                     players,
@@ -139,6 +129,73 @@ public class Game {
             );
         }
 
+    }
+
+    public void printBoard() {
+        board.printBoard();
+    }
+
+    private boolean validateMove(Move move) {
+        int row = move.getCell().getRow();
+        int col = move.getCell().getCol();
+
+        if(row >= board.getSize()) {
+            return false;
+        }
+        if(col >= board.getSize()) {
+            return false;
+        }
+
+        if(board.getBoard().get(row).get(col).getCellState().equals(CellState.EMPTY)) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkWinner(Board board, Move move) {
+        for(WinningStrategy winningStrategy: winningStrategies) {
+            if(winningStrategy.checkWinner(board, move)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void makeMove() {
+        Player currentMovePlayer = players.get(nextMovePlayerIndex);
+        
+        System.out.println("It is " + currentMovePlayer.getName() + "'s to turn, please make a move");
+
+        Move move = currentMovePlayer.makeMove(board);
+
+        System.out.println(currentMovePlayer.getName() + " has made a move at row: " 
+                        + move.getCell().getRow() + " column: " + move.getCell().getCol() + " .");
+ 
+
+        if(!validateMove(move)) {
+            System.out.println("Invalid Move. Please try again");
+            return;
+        }
+        int row = move.getCell().getRow();
+        int col = move.getCell().getCol();
+
+        Cell cellToChange = board.getBoard().get(row).get(col);
+        cellToChange.setCellState(CellState.FILLED);
+        cellToChange.setPlayer(currentMovePlayer);
+        Move FinalMoveObject = new Move(cellToChange, currentMovePlayer);
+        moves.add(FinalMoveObject);
+
+        nextMovePlayerIndex += 1;
+        nextMovePlayerIndex %= players.size();
+
+        if(checkWinner(board, FinalMoveObject)) {
+            gameState = GameState.WIN;
+            winner = currentMovePlayer;
+        }
+
+        if(moves.size() == this.board.getSize()*this.board.getSize()) {
+            gameState = GameState.DRAW;
+        }
     }
 
     public List<Player> getPlayers() {
@@ -155,6 +212,7 @@ public class Game {
     }
     public List<Move> getMoves() {
         return moves;
+
     }
     public void setMoves(List<Move> moves) {
         this.moves = moves;
