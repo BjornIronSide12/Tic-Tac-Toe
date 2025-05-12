@@ -5,22 +5,23 @@ import java.util.List;
 import main.java.com.raghvendra.tictactoe.models.Game;
 import main.java.com.raghvendra.tictactoe.models.GameState;
 import main.java.com.raghvendra.tictactoe.models.Player;
-import main.java.com.raghvendra.tictactoe.strategies.winningstrategies.WinningStrategy;
 
 public class GameController {
     public Game startGame(int dimensionOfBoard, 
-                   List<Player> players,
-                   List<WinningStrategy> winningStrategies) throws Exception {
-                
-                return Game.getBuilder()
-                        .setPlayers(players)
-                        .setWinningStrategies(winningStrategies)
-                        .setDimension(dimensionOfBoard)
-                        .build();
+                   List<Player> players) throws Exception {
+                try {
+                    return Game.getBuilder()
+                            .setPlayers(players)
+                            .setDimension(dimensionOfBoard)
+                            .build();
+                } catch(Exception e) {
+                    System.out.println("Error in starting the game");
+            return null;
+        }
     }
 
     public void makeMove(Game game) {
-        game.makeMove();
+        game.makeNextMove();
     }
 
     void undo(Game game) {
@@ -28,14 +29,14 @@ public class GameController {
     }
 
     public GameState checkState(Game game) {
-        return game.getGameState();
+        return game.getGameStatus();
     }
 
-    void gateWinner(Game game) {
-
+    public Player getWinner(Game game) {
+        return game.getWinner();
     }
 
     public void printBoard(Game game) {
-        game.printBoard();
+        game.displayBoard();
     }
 }

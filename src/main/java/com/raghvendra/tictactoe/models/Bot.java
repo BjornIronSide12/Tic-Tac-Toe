@@ -5,15 +5,15 @@ import main.java.com.raghvendra.tictactoe.strategies.botplayingstrategies.BotPla
 
 public class Bot extends Player{
     private BotDifficultyLevel botDifficultyLevel;
-    private BotPlayingStrategy botPlayingStrategy;
+    private final BotPlayingStrategy botPlayingStrategy;
 
     public BotDifficultyLevel getBotDifficultyLevel() {
         return botDifficultyLevel;
     }
 
-    public  Bot(Long id, String name, Symbol symbol,
+    public  Bot(String name, Symbol symbol,
                  BotDifficultyLevel botDifficultyLevel) {
-        super(id, name, symbol, PlayerType.BOT);
+        super(name, symbol, PlayerType.BOT);
         this.botDifficultyLevel = botDifficultyLevel;
         this.botPlayingStrategy = BotPlayingStrategyFactory
                                     .getBotPlayingStrategyForDifficultyLevel(botDifficultyLevel);

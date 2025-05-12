@@ -2,10 +2,7 @@ package main.java.com.raghvendra.tictactoe.strategies.botplayingstrategies;
 
 import java.util.List;
 
-import main.java.com.raghvendra.tictactoe.models.Board;
-import main.java.com.raghvendra.tictactoe.models.Cell;
-import main.java.com.raghvendra.tictactoe.models.CellState;
-import main.java.com.raghvendra.tictactoe.models.Move;
+import main.java.com.raghvendra.tictactoe.models.*;
 
 public class EasyBotPlayingStrategy implements BotPlayingStrategy{
    
@@ -17,7 +14,7 @@ public class EasyBotPlayingStrategy implements BotPlayingStrategy{
                 if(cell.getCellState().equals(CellState.EMPTY)) {
                     return new Move(
                                 cell,
-                                null);
+                                cell.getPlayer());
                 }
             }
         }

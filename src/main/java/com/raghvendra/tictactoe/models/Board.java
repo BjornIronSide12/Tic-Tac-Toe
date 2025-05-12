@@ -4,14 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Board {
-    private int size;
     private List<List<Cell>> board;
 
     public Board(int dimension) {
-        size = dimension;
-        board = new ArrayList();
-        
-        for(int i = 0; i < dimension; ++i) {
+        this.board = new ArrayList();
+
+        // creating a board for dimension x dimension size
+        for(int i = 0; i < dimension; i++) {
             board.add(new ArrayList<>());
 
             for(int j = 0; j < dimension; j++) {
@@ -21,20 +20,17 @@ public class Board {
     }
 
     public void printBoard() {
-        for(List<Cell> row: board) {
-            for(Cell cell: row) {
-                cell.display();
+        for(int i = 0; i < board.size(); i++) {
+            for(int j = 0; j < board.size(); j++) {
+                Cell currentCell = board.get(i).get(j);
+                if(currentCell.getCellState().equals(CellState.EMPTY)) {
+                    System.out.print("|   |");
+                } else {
+                    System.out.print("| " + currentCell.getPlayer().getSymbol().getaChar() + " |");
+                }
             }
             System.out.println();
         }
-    }
-
-    public int getSize() {
-        return size;
-    }
-
-    public void setSize(int size) {
-        this.size = size;
     }
 
     public List<List<Cell>> getBoard() {

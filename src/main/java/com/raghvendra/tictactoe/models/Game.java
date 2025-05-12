@@ -1,52 +1,151 @@
 package main.java.com.raghvendra.tictactoe.models;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import main.java.com.raghvendra.tictactoe.exceptions.DuplicateSymbolException;
-import main.java.com.raghvendra.tictactoe.exceptions.MoreThanOneBotException;
 import main.java.com.raghvendra.tictactoe.exceptions.PlayersCountDimensionMismatchException;
-import main.java.com.raghvendra.tictactoe.strategies.winningstrategies.WinningStrategy;
+import main.java.com.raghvendra.tictactoe.strategies.gamewinningstrategy.GameWinningStrategy;
+import main.java.com.raghvendra.tictactoe.strategies.gamewinningstrategy.OrderOneGameWinningStrategy;
 
 
 /**
  * Game
  */
 public class Game {
-    private List<Player> players;
     private Board board;
+    private List<Player> players;
     private List<Move> moves;
+    private GameState gameStatus;
+    private int nextPlayerIndex;
+    private GameWinningStrategy gameWinningStrategy;
     private Player winner;
-    private GameState gameState;
-    private int nextMovePlayerIndex;
-    private List<WinningStrategy> winningStrategies;
+    private int emptyCells;
+
+    public Player getWinner() {
+        return winner;
+    }
+
+    public void setWinner(Player winner) {
+        this.winner = winner;
+    }
+
+    public GameWinningStrategy getGameWinningStrategy() {
+        return gameWinningStrategy;
+    }
+
+    public void setGameWinningStrategy(GameWinningStrategy gameWinningStrategy) {
+        this.gameWinningStrategy = gameWinningStrategy;
+    }
+
+    private Game() {
+    }
+
+    public int getEmptyCells() {
+        return this.emptyCells;
+    }
+
+    public void setEmptyCells(int count) {
+        this.emptyCells = count;
+    }
 
     public static Builder getBuilder() {
         return new Builder();
     }
 
-    //All of the attributes of the game class should be set in the constructor 
-    // *** THIS IS MANDETORY *** TO avoid null pointer exception 
-    private Game(int dimension, List<Player> players, List<WinningStrategy> winningStrategies) {
-        this.nextMovePlayerIndex = 0;
-        this.gameState = GameState.IN_PROGRESS;
-        this.moves = new ArrayList<>();
-        this.players = players;
-        this.winningStrategies = winningStrategies;
-        this.board = new Board(dimension);
+    public void undo() {}
 
+    public void makeNextMove() {
+        Player toMovePlayer = players.get(nextPlayerIndex);
+
+        System.out.println("It is " + players.get(nextPlayerIndex).getName() + "'s turn.");
+
+        // Move is validated in makeMove method
+        Move move = toMovePlayer.makeMove(this.board);
+
+
+        int row = move.getCell().getRow();
+        int col = move.getCell().getCol();
+
+        System.out.println("Move happened at: " +
+                row + ", " + col + ".");
+
+        board.getBoard().get(row).get(col).setCellState(CellState.FILLED);
+        emptyCells--; // 1 cell is filled will reduce the count of empty cells
+        board.getBoard().get(row).get(col).setPlayer(players.get(nextPlayerIndex));
+
+        Move finalMove = new Move(
+                board.getBoard().get(row).get(col),
+                players.get(nextPlayerIndex)
+        );
+
+        this.moves.add(finalMove);
+
+        if (gameWinningStrategy.checkWinner(
+                board, players.get(nextPlayerIndex), finalMove.getCell()
+        )) {
+            gameStatus = GameState.ENDED;
+            winner = players.get(nextPlayerIndex);
+        }
+        if(gameStatus.equals(GameState.IN_PROGRESS) && emptyCells == 0) {
+            gameStatus = GameState.DRAW;
+        }
+        nextPlayerIndex += 1;
+        nextPlayerIndex %= players.size();
+    }
+
+    public void displayBoard() {
+        this.board.printBoard();
+    }
+
+    public Board getBoard() {
+        return board;
+    }
+
+    public void setBoard(Board board) {
+        this.board = board;
+    }
+
+    public List<Player> getPlayers() {
+        return players;
+    }
+
+    public void setPlayers(List<Player> players) {
+        this.players = players;
+    }
+
+    public List<Move> getMoves() {
+        return moves;
+    }
+
+    public void setMoves(List<Move> moves) {
+        this.moves = moves;
+    }
+
+    public GameState getGameStatus() {
+        return gameStatus;
+    }
+
+    public void setGameStatus(GameState gameStatus) {
+        this.gameStatus = gameStatus;
+    }
+
+    public int getNextPlayerIndex() {
+        return nextPlayerIndex;
+    }
+
+    public void setNextPlayerIndex(int nextPlayerIndex) {
+        this.nextPlayerIndex = nextPlayerIndex;
     }
 
     public static class Builder {
-        // Builder has only those attributes which are inputs given by clients 
-
-        private List<Player> players = new ArrayList<>();
-        
-        private List<WinningStrategy> winningStrategies = new ArrayList<>();
-
         private int dimension;
+        private List<Player> players;
+
+
+        public Builder setDimension(int dimension) {
+            this.dimension = dimension;
+            return this;
+        }
 
 
         public Builder setPlayers(List<Player> players) {
@@ -54,192 +153,39 @@ public class Game {
             return this;
         }
 
-        public Builder addPlayer(Player player) {
-            this.players.add(player);
-            return this;
-        }
-
-        public Builder addWinningStrategy(WinningStrategy winningStrategy) {
-            this.winningStrategies.add(winningStrategy);
-            return this;
-        }
-        
-        public Builder setWinningStrategies(List<WinningStrategy> winningStrategies) {
-            this.winningStrategies = winningStrategies;
-            return this;
-        }
-
-        public Builder setDimension(int dimension) {
-            this.dimension = dimension;
-            return this;
-        }
-
-        private void validateBotCount() throws MoreThanOneBotException {
-            int botCount = 0;
-            for(Player player: players) {
-                if(player.getPlayerType().equals(PlayerType.BOT)) {
-                    botCount++;
-                }
+        private boolean valid() throws Exception {
+            if (this.dimension < 3) {
+                throw new PlayersCountDimensionMismatchException("Dimension of game can't be 1");
             }
 
-            if(botCount > 1) {
-                throw new MoreThanOneBotException();
+            if (this.players.size() != this.dimension - 1) {
+                throw new PlayersCountDimensionMismatchException("Number of Players must be Dimension - 1");
             }
-        }
-        
-        private void validateDimensionAndPlayerCount() throws PlayersCountDimensionMismatchException{
-            if(players.size() != dimension - 1) {
-                throw new PlayersCountDimensionMismatchException();
-            }
-        }
 
-        private void validateSymbolsForPlayers() throws DuplicateSymbolException {
-            Map<Character, Integer> symbolCounts = new HashMap<>();
+            // Validate no 2 people with same char
 
-            for(Player player: players) {
-                if(!symbolCounts.containsKey(player.getSymbol().getaChar())) {
-                    symbolCounts.put(player.getSymbol().getaChar(), 0);
-                }
+            // Validate all 1 bot
 
-                symbolCounts.put(
-                    player.getSymbol().getaChar(),
-                    symbolCounts.get(player.getSymbol().getaChar()) + 1
-            );
-            
-            if(symbolCounts.get(player.getSymbol().getaChar()) > 1) {
-                throw new DuplicateSymbolException();
-                }
-            }
-        }
-        // We need to validate the data before building the game "Builder design pattern"
-        private void validate() throws Exception {
-            validateBotCount();
-            validateDimensionAndPlayerCount();                
-            validateSymbolsForPlayers();
-        }
-
-        // Builder requrires a build() method 
-        // And we also need to make the constructor of the Game as private 
-        public Game build() throws Exception {
-            validate();
-            return new Game(
-                    dimension,
-                    players,
-                    winningStrategies
-            );
-        }
-
-    }
-
-    public void printBoard() {
-        board.printBoard();
-    }
-
-    private boolean validateMove(Move move) {
-        int row = move.getCell().getRow();
-        int col = move.getCell().getCol();
-
-        if(row >= board.getSize()) {
-            return false;
-        }
-        if(col >= board.getSize()) {
-            return false;
-        }
-
-        if(board.getBoard().get(row).get(col).getCellState().equals(CellState.EMPTY)) {
             return true;
         }
-        return false;
-    }
 
-    private boolean checkWinner(Board board, Move move) {
-        for(WinningStrategy winningStrategy: winningStrategies) {
-            if(winningStrategy.checkWinner(board, move)) {
-                return true;
+        public Game build() throws Exception {
+            try {
+                valid();
+            } catch (Exception e) {
+                throw new Exception(e.getMessage());
             }
-        }
-        return false;
-    }
 
-    public void makeMove() {
-        Player currentMovePlayer = players.get(nextMovePlayerIndex);
-        
-        System.out.println("It is " + currentMovePlayer.getName() + "'s to turn, please make a move");
+            Game game = new Game();
+            game.setGameStatus(GameState.IN_PROGRESS);
+            game.setPlayers(players);
+            game.setMoves(new ArrayList<>());
+            game.setBoard(new Board(dimension));
+            game.setNextPlayerIndex(0);
+            game.setGameWinningStrategy(new OrderOneGameWinningStrategy(dimension));
+            game.setEmptyCells(dimension*dimension);
 
-        Move move = currentMovePlayer.makeMove(board);
-
-        System.out.println(currentMovePlayer.getName() + " has made a move at row: " 
-                        + move.getCell().getRow() + " column: " + move.getCell().getCol() + " .");
- 
-
-        if(!validateMove(move)) {
-            System.out.println("Invalid Move. Please try again");
-            return;
-        }
-        int row = move.getCell().getRow();
-        int col = move.getCell().getCol();
-
-        Cell cellToChange = board.getBoard().get(row).get(col);
-        cellToChange.setCellState(CellState.FILLED);
-        cellToChange.setPlayer(currentMovePlayer);
-        Move FinalMoveObject = new Move(cellToChange, currentMovePlayer);
-        moves.add(FinalMoveObject);
-
-        nextMovePlayerIndex += 1;
-        nextMovePlayerIndex %= players.size();
-
-        if(checkWinner(board, FinalMoveObject)) {
-            gameState = GameState.WIN;
-            winner = currentMovePlayer;
-        }
-
-        if(moves.size() == this.board.getSize()*this.board.getSize()) {
-            gameState = GameState.DRAW;
+            return game;
         }
     }
-
-    public List<Player> getPlayers() {
-        return players;
-    }
-    public void setPlayers(List<Player> players) {
-        this.players = players;
-    }
-    public Board getBoard() {
-        return board;
-    }
-    public void setBoard(Board board) {
-        this.board = board;
-    }
-    public List<Move> getMoves() {
-        return moves;
-
-    }
-    public void setMoves(List<Move> moves) {
-        this.moves = moves;
-    }
-    public Player getWinner() {
-        return winner;
-    }
-    public void setWinner(Player winner) {
-        this.winner = winner;
-    }
-    public GameState getGameState() {
-        return gameState;
-    }
-    public void setGameState(GameState gameState) {
-        this.gameState = gameState;
-    }
-    public int getNextMovePlayerIndex() {
-        return nextMovePlayerIndex;
-    }
-    public void setNextMovePlayerIndex(int nextMovePlayerIndex) {
-        this.nextMovePlayerIndex = nextMovePlayerIndex;
-    }
-    public List<WinningStrategy> getWinningStrategies() {
-        return winningStrategies;
-    }
-    public void setWinningStrategies(List<WinningStrategy> winningStrategies) {
-        this.winningStrategies = winningStrategies;
-    }
-    
 }
