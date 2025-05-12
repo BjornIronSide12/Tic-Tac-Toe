@@ -3,7 +3,6 @@ package main.java.com.raghvendra.tictactoe.strategies.gamewinningstrategy;
 import main.java.com.raghvendra.tictactoe.models.Board;
 import main.java.com.raghvendra.tictactoe.models.Cell;
 import main.java.com.raghvendra.tictactoe.models.Player;
-import main.java.com.raghvendra.tictactoe.models.Symbol;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -67,5 +67,7 @@ public class Player {
     public void setPlayerType(PlayerType playerType) {
         this.playerType = playerType;
     }
-    
+    public Bot makeBot()  {
+        return new Bot(this.name, this.getSymbol(), BotDifficultyLevel.EASY);
+    }
 }

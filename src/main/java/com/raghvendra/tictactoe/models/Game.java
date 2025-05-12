@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import main.java.com.raghvendra.tictactoe.exceptions.PlayersCountDimensionMismatchException;
+import main.java.com.raghvendra.tictactoe.strategies.botplayingstrategies.EasyBotPlayingStrategy;
 import main.java.com.raghvendra.tictactoe.strategies.gamewinningstrategy.GameWinningStrategy;
 import main.java.com.raghvendra.tictactoe.strategies.gamewinningstrategy.OrderOneGameWinningStrategy;
+import main.java.com.raghvendra.tictactoe.strategies.botplayingstrategies.BotPlayingStrategy;
 
 
 /**
@@ -20,6 +22,7 @@ public class Game {
     private GameWinningStrategy gameWinningStrategy;
     private Player winner;
     private int emptyCells;
+    private EasyBotPlayingStrategy easyBotPlayingStrategy;
 
     public Player getWinner() {
         return winner;
@@ -55,14 +58,18 @@ public class Game {
     public void undo() {}
 
     public void makeNextMove() {
+        Move move = null;
         Player toMovePlayer = players.get(nextPlayerIndex);
+        if(toMovePlayer.getPlayerType() == PlayerType.BOT) {
+            Bot bot = toMovePlayer.makeBot();
+            move = bot.makeMove(board);
+        } else {
+            System.out.println("It is " + players.get(nextPlayerIndex).getName() + "'s turn.");
 
-        System.out.println("It is " + players.get(nextPlayerIndex).getName() + "'s turn.");
+            // Move is validated in makeMove method
+            move = toMovePlayer.makeMove(this.board);
 
-        // Move is validated in makeMove method
-        Move move = toMovePlayer.makeMove(this.board);
-
-
+        }
         int row = move.getCell().getRow();
         int col = move.getCell().getCol();
 

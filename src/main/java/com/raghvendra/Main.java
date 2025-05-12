@@ -68,9 +68,11 @@ public class Main {
                 
             }
             if(gameController.checkState(game).equals(DRAW)) {
+                gameController.printBoard(game);
                 System.out.println("GAME HAS DRAWN");
             }
             else {
+                gameController.printBoard(game);
                 System.out.println("GAME is ENDED");
                 System.out.println("Winner is: " + gameController.getWinner(game).getName());
             }
